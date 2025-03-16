@@ -1,16 +1,22 @@
 from flask import Flask, jsonify, request
 from SmartApi import SmartConnect  # Angel One SmartAPI
+import pyotp
 import datetime
 
 app = Flask(__name__)
 
-# Replace with your Angel One credentials
+# Replace with your actual Angel One credentials
 API_KEY = "Ex19gQKe"
 CLIENT_ID = "AAAJ462953"
 PASSWORD = "Ayantika@1"
+TOTP_SECRET = "ZX2FX7WYTDTYNI23KHA7FN6BX4"  # This must be set manually
 
+# Generate TOTP for login
+totp = pyotp.TOTP(TOTP_SECRET).now()
+
+# Authenticate with Angel One
 obj = SmartConnect(api_key=API_KEY)
-data = obj.generateSession(CLIENT_ID, PASSWORD)
+data = obj.generateSession(CLIENT_ID, PASSWORD, totp)
 AUTH_TOKEN = data['data']['jwtToken']
 
 @app.route('/')
@@ -22,7 +28,7 @@ def historical_data():
     try:
         symbol_token = request.args.get('symbol_token', '3045')  # Default: RELIANCE
         exchange = request.args.get('exchange', 'NSE')
-        interval = request.args.get('interval', 'ONE_MINUTE')  # Other options: 'FIVE_MINUTE', 'DAY'
+        interval = request.args.get('interval', 'ONE_MINUTE')  # Other: 'FIVE_MINUTE', 'DAY'
         
         to_date = datetime.datetime.today().strftime('%Y-%m-%d %H:%M')
         from_date = (datetime.datetime.today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d %H:%M')
