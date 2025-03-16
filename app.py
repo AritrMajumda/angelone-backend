@@ -1,20 +1,38 @@
+
+
 from flask import Flask, request, jsonify
 from SmartApi import SmartConnect
 import pyotp
 import os
+import logging
 
 app = Flask(__name__)
-API_KEY = os.getenv("Ex19gQKe")
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Environment variables
+API_KEY = os.getenv("ND6R2gMJ")
 CLIENT_CODE = os.getenv("AAAJ462953")
 PIN = os.getenv("0109")
-TOTP_KEY = os.getenv("ZX2FX7WYTDTYNI23KHA7FN6BX4")  # Secret key for TOTP from your authenticator setup
-
+TOTP_KEY = os.getenv("ZX2FX7WYTDTYNI23KHA7FN6BX4")
 
 # Initialize SmartAPI connection
 smart_api = SmartConnect(api_key=API_KEY)
 
 def login():
     try:
+        # Validate environment variables
+        if not API_KEY:
+            raise Exception("API_KEY is not set")
+        if not CLIENT_CODE:
+            raise Exception("CLIENT_CODE is not set")
+        if not PIN:
+            raise Exception("PIN is not set")
+        if not TOTP_KEY:
+            raise Exception("TOTP_KEY is not set")
+
         totp = pyotp.TOTP(TOTP_KEY).now()
         data = smart_api.generateSession(CLIENT_CODE, PIN, totp)
         if data["status"]:
@@ -22,22 +40,23 @@ def login():
         else:
             raise Exception("Login failed: " + data["message"])
     except Exception as e:
-        raise Exception("Authentication error: " + str(e))
+        logger.error(f"Login error: {str(e)}", exc_info=True)
+        raise
+
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"message": "Welcome to Angel One Historical Data API! Use /historical-data to fetch data."})
 
 @app.route("/historical-data", methods=["GET"])
 def get_historical_data():
     try:
-        # Login to SmartAPI
         api = login()
-
-        # Get parameters from query string
         exchange = request.args.get("exchange", "NSE")
-        symbol_token = request.args.get("symbol_token", "3045")  # Default: SBIN-EQ
+        symbol_token = request.args.get("symbol_token", "3045")
         interval = request.args.get("interval", "ONE_MINUTE")
         from_date = request.args.get("from_date", "2025-03-01 09:15")
         to_date = request.args.get("to_date", "2025-03-15 15:15")
 
-        # Historical data parameters
         historic_params = {
             "exchange": exchange,
             "symboltoken": symbol_token,
@@ -46,7 +65,6 @@ def get_historical_data():
             "todate": to_date
         }
 
-        # Fetch data
         response = api.getCandleData(historic_params)
         if response["status"]:
             return jsonify({"status": "success", "data": response["data"]})
@@ -54,6 +72,7 @@ def get_historical_data():
             return jsonify({"status": "error", "message": response["message"]}), 400
 
     except Exception as e:
+        logger.error(f"Historical data error: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
