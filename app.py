@@ -40,7 +40,7 @@ def home():
 @app.route('/historical-data', methods=['GET'])
 def historical_data():
     try:
-        symboltoken = request.args.get('symboltoken', '3045')  # Default: RELIANCE
+        symbol_token = request.args.get('symbol_token', '3045')  # Default: RELIANCE
         exchange = request.args.get('exchange', 'NSE')
         interval = request.args.get('interval', 'ONE_MINUTE')  
 
@@ -48,7 +48,7 @@ def historical_data():
         from_date = (datetime.datetime.today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d %H:%M')
 
         historic_data = obj.getCandleData(
-            symboltoken=symboltoken, exchange=exchange, interval=interval,
+            symboltoken=symbol_token, exchange=exchange, interval=interval,
             fromdate=from_date, todate=to_date
         )
 
