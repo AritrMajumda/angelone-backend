@@ -1,8 +1,9 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from SmartApi import SmartConnect
 import pyotp
 import os
 import logging
+import csv
 
 app = Flask(__name__)
 
@@ -42,7 +43,7 @@ def login():
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"message": "Welcome to Angel One Historical Data API! Use /historical-data to fetch data."})
+    return jsonify({"message": "Welcome to Angel One Historical Data API! Use /historical-data to fetch data or /historical-data/csv to download as CSV."})
 
 @app.route("/historical-data", methods=["GET"])
 def get_historical_data():
@@ -64,7 +65,6 @@ def get_historical_data():
 
         response = api.getCandleData(historic_params)
         if response["status"]:
-            # Ensure 'data' is a list of candles and format it
             candle_data = response["data"]
             if isinstance(candle_data, list):
                 return jsonify({"status": "success", "data": candle_data})
@@ -76,6 +76,47 @@ def get_historical_data():
 
     except Exception as e:
         logger.error(f"Historical data error: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/historical-data/csv", methods=["GET"])
+def get_historical_data_csv():
+    try:
+        api = login()
+        exchange = request.args.get("exchange", "NSE")
+        symbol_token = request.args.get("symbol_token", "3045")
+        interval = request.args.get("interval", "ONE_MINUTE")
+        from_date = request.args.get("from_date", "2025-03-01 09:15")
+        to_date = request.args.get("to_date", "2025-03-15 15:15")
+
+        historic_params = {
+            "exchange": exchange,
+            "symboltoken": symbol_token,
+            "interval": interval,
+            "fromdate": from_date,
+            "todate": to_date
+        }
+
+        response = api.getCandleData(historic_params)
+        if response["status"]:
+            candle_data = response["data"]
+            if isinstance(candle_data, list):
+                # Create CSV response
+                output = make_response()
+                output.headers["Content-Disposition"] = "attachment; filename=historical_data.csv"
+                output.headers["Content-type"] = "text/csv"
+                writer = csv.writer(output)
+                writer.writerow(["Timestamp", "Open", "High", "Low", "Close", "Volume"])  # Write header
+                for row in candle_data:
+                    writer.writerow(row)  # Write each candle row
+                return output
+            else:
+                logger.error("Unexpected data format: %s", candle_data)
+                return jsonify({"status": "error", "message": "Invalid data format from API"}), 500
+        else:
+            return jsonify({"status": "error", "message": response["message"]}), 400
+
+    except Exception as e:
+        logger.error(f"Historical data CSV error: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
