@@ -1,6 +1,3 @@
-flask
-smartapi-python
-pyotp
-gunicorn
-logzero
-websocket-client
+flask==2.3.3
+smartapi-python==1.4.2
+pyotp==2.9.0
