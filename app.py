@@ -19,6 +19,15 @@ obj = SmartConnect(api_key=API_KEY)
 data = obj.generateSession(CLIENT_ID, PASSWORD, totp)
 AUTH_TOKEN = data['data']['jwtToken']
 
+data = obj.generateSession(CLIENT_ID, PASSWORD, totp)
+
+# Print the API response for debugging
+print("Login Response:", data)
+
+# Check if login was successful
+if data is None or 'data' not in data:
+    raise Exception("Login failed! Check API key, client ID, password, or TOTP.")
+
 @app.route('/')
 def home():
     return jsonify({"message": "Angel One API is working!"})
