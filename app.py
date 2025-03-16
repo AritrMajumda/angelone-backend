@@ -74,6 +74,14 @@ def get_historical_data():
     except Exception as e:
         logger.error(f"Historical data error: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": str(e)}), 500
+@app.route("/debug", methods=["GET"])
+def debug():
+    return jsonify({
+        "API_KEY": API_KEY,
+        "CLIENT_CODE": CLIENT_CODE,
+        "PIN": PIN,
+        "TOTP_KEY": TOTP_KEY
+    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
