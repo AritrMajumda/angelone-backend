@@ -2,13 +2,13 @@ from flask import Flask, request, jsonify
 from SmartApi import SmartConnect
 import pyotp
 import os
-import logging  # Import logging module
+import logging
 
 app = Flask(__name__)
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)  # Configure logging
-logger = logging.getLogger(__name__)     # Define logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Environment variables
 API_KEY = os.getenv("API_KEY")
@@ -64,22 +64,19 @@ def get_historical_data():
 
         response = api.getCandleData(historic_params)
         if response["status"]:
-            return jsonify({"status": "success", "data": response["data"]})
+            # Ensure 'data' is a list of candles and format it
+            candle_data = response["data"]
+            if isinstance(candle_data, list):
+                return jsonify({"status": "success", "data": candle_data})
+            else:
+                logger.error("Unexpected data format: %s", candle_data)
+                return jsonify({"status": "error", "message": "Invalid data format from API"}), 500
         else:
             return jsonify({"status": "error", "message": response["message"]}), 400
 
     except Exception as e:
         logger.error(f"Historical data error: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route("/debug", methods=["GET"])
-def debug():
-    return jsonify({
-        "API_KEY": API_KEY,
-        "CLIENT_CODE": CLIENT_CODE,
-        "PIN": PIN,
-        "TOTP_KEY": TOTP_KEY
-    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
