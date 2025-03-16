@@ -7,6 +7,7 @@ import os
 import logging
 
 app = Flask(__name__)
+logger.info("Environment variables: %s", os.environ)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
