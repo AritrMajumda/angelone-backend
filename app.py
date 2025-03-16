@@ -5,10 +5,10 @@ import pyotp
 app = Flask(__name__)
 
 # 🔹 Replace these with your Angel One API credentials
-API_KEY = "your_api_key"
-CLIENT_ID = "your_client_id"
-PASSWORD = "your_password"
-TOTP_SECRET = "your_totp_secret"
+API_KEY = "Ex19gQKe"
+CLIENT_ID = "651548e7-0eee-4603-a6f9-a9838d997d29"
+PASSWORD = "Ayantika@1"
+TOTP_SECRET = "ZX2FX7WYTDTYNI23KHA7FN6BX4"
 
 @app.route('/historical-data', methods=['GET'])
 def get_historical_data():
