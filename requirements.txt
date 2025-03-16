@@ -1,3 +1,4 @@
 flask
 smartapi-python
 pyotp
+gunicorn
