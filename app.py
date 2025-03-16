@@ -1,5 +1,5 @@
 from flask import Flask, jsonify
-from smartapi import SmartConnect
+from SmartApi import SmartConnect
 import pyotp
 
 app = Flask(__name__)
