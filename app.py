@@ -26,7 +26,7 @@ if data is None or 'data' not in data or 'refreshToken' not in data['data']:
 
 # Step 2: Use refreshToken to get Access Token
 refresh_token = data['data']['refreshToken']
-session_data = obj.generateSession(refresh_token)
+session_data = obj.generateToken(refresh_token)
 
 if session_data is None or 'data' not in session_data or 'jwtToken' not in session_data['data']:
     raise Exception("Session creation failed! Check refresh token.")
