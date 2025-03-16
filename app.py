@@ -4,6 +4,16 @@ import pyotp
 
 app = Flask(__name__)
 
+@app.route('/')
+def home():
+    return jsonify({"message": "Angel One API is working!"})
+
+@app.route('/historical-data')
+def historical_data():
+    return jsonify({"message": "Historical data will be fetched here"})
+
+if __name__ == '__main__':
+    app.run(debug=True)
 # 🔹 Replace these with your Angel One API credentials
 API_KEY = "Ex19gQKe"
 CLIENT_ID = "651548e7-0eee-4603-a6f9-a9838d997d29"
