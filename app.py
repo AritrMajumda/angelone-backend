@@ -1,63 +1,60 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request, jsonify
 from SmartApi import SmartConnect
 import pyotp
-import datetime
+import os
 
 app = Flask(__name__)
+API_KEY = os.getenv("Ex19gQKe")
+CLIENT_CODE = os.getenv("AAAJ462953")
+PIN = os.getenv("0109")
+TOTP_KEY = os.getenv("ZX2FX7WYTDTYNI23KHA7FN6BX4")  # Secret key for TOTP from your authenticator setup
 
-# Angel One Credentials
-API_KEY = "Ex19gQKe"
-CLIENT_ID = "AAAJ462953"
-MPIN = "0109"  # Use MPIN instead of Password
-TOTP_SECRET = "ZX2FX7WYTDTYNI23KHA7FN6BX4"
 
-# Generate TOTP for login
-totp = pyotp.TOTP(TOTP_SECRET).now()
+# Initialize SmartAPI connection
+smart_api = SmartConnect(api_key=API_KEY)
 
-# Authenticate with Angel One using MPIN
-obj = SmartConnect(api_key=API_KEY)
-data = obj.generateSession(CLIENT_ID, password=MPIN, totp=totp)
-# Debug: Print login response
-print("Login Response:", data)
-
-# Check for login failure
-if data is None or 'data' not in data or 'refreshToken' not in data['data']:
-    raise Exception("Login failed! Check API credentials, MPIN, or TOTP.")
-
-# Step 2: Use refreshToken to get Access Token
-refresh_token = data['data']['refreshToken']
-session_data = obj.generateToken(refresh_token)
-
-if session_data is None or 'data' not in session_data or 'jwtToken' not in session_data['data']:
-    raise Exception("Session creation failed! Check refresh token.")
-
-AUTH_TOKEN = session_data['data']['jwtToken']
-
-@app.route('/')
-def home():
-    return jsonify({"message": "Angel One API is working!"})
+def login():
+    try:
+        totp = pyotp.TOTP(TOTP_KEY).now()
+        data = smart_api.generateSession(CLIENT_CODE, PIN, totp)
+        if data["status"]:
+            return smart_api
+        else:
+            raise Exception("Login failed: " + data["message"])
+    except Exception as e:
+        raise Exception("Authentication error: " + str(e))
 
 @app.route("/historical-data", methods=["GET"])
-
-smart_api.getCandleData(exchange="NSE",symboltoken="3045",interval="ONE_MINUTE",fromdate="2024-03-15 09:00",todate="2024-03-15 15:30")
-def historical_data():
+def get_historical_data():
     try:
-        symboltoken = request.args.get("symboltoken")
-        exchange = request.args.get("exchange")
-        interval = request.args.get("interval")
+        # Login to SmartAPI
+        api = login()
 
-        # Add required fromdate & todate
-        today = datetime.date.today()
-        fromdate = f"{today} 09:00"
-        todate = f"{today} 15:30"
+        # Get parameters from query string
+        exchange = request.args.get("exchange", "NSE")
+        symbol_token = request.args.get("symbol_token", "3045")  # Default: SBIN-EQ
+        interval = request.args.get("interval", "ONE_MINUTE")
+        from_date = request.args.get("from_date", "2025-03-01 09:15")
+        to_date = request.args.get("to_date", "2025-03-15 15:15")
 
-        # Call SmartAPI function with correct parameters
-        data = smart_api.getCandleData(exchange=exchange,symboltoken=symboltoken,interval=interval,fromdate=fromdate,todate=todate)
+        # Historical data parameters
+        historic_params = {
+            "exchange": exchange,
+            "symboltoken": symbol_token,
+            "interval": interval,
+            "fromdate": from_date,
+            "todate": to_date
+        }
 
-        return jsonify(data)
+        # Fetch data
+        response = api.getCandleData(historic_params)
+        if response["status"]:
+            return jsonify({"status": "success", "data": response["data"]})
+        else:
+            return jsonify({"status": "error", "message": response["message"]}), 400
 
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
