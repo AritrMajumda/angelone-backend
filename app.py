@@ -1,30 +1,26 @@
-
-
 from flask import Flask, request, jsonify
 from SmartApi import SmartConnect
 import pyotp
 import os
-import logging
+import logging  # Import logging module
 
 app = Flask(__name__)
-logger.info("Environment variables: %s", os.environ)
 
 # Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)  # Configure logging
+logger = logging.getLogger(__name__)     # Define logger
 
 # Environment variables
-API_KEY = os.getenv("ND6R2gMJ")
-CLIENT_CODE = os.getenv("AAAJ462953")
-PIN = os.getenv("0109")
-TOTP_KEY = os.getenv("ZX2FX7WYTDTYNI23KHA7FN6BX4")
+API_KEY = os.getenv("API_KEY")
+CLIENT_CODE = os.getenv("CLIENT_CODE")
+PIN = os.getenv("PIN")
+TOTP_KEY = os.getenv("TOTP_KEY")
 
 # Initialize SmartAPI connection
 smart_api = SmartConnect(api_key=API_KEY)
 
 def login():
     try:
-        # Validate environment variables
         if not API_KEY:
             raise Exception("API_KEY is not set")
         if not CLIENT_CODE:
@@ -75,6 +71,7 @@ def get_historical_data():
     except Exception as e:
         logger.error(f"Historical data error: {str(e)}", exc_info=True)
         return jsonify({"status": "error", "message": str(e)}), 500
+
 @app.route("/debug", methods=["GET"])
 def debug():
     return jsonify({
