@@ -37,25 +37,27 @@ AUTH_TOKEN = session_data['data']['jwtToken']
 def home():
     return jsonify({"message": "Angel One API is working!"})
 
-@app.route('/historical-data', methods=['GET'])
+@app.route("/historical-data", methods=["GET"])
+
+smart_api.getCandleData(exchange="NSE",symboltoken="3045",interval="ONE_MINUTE",fromdate="2024-03-15 09:00",todate="2024-03-15 15:30")
 def historical_data():
     try:
-        symbol_token = request.args.get('symbol_token', '3045')  # Default: RELIANCE
-        exchange = request.args.get('exchange', 'NSE')
-        interval = request.args.get('interval', 'ONE_MINUTE')  
+        symboltoken = request.args.get("symboltoken")
+        exchange = request.args.get("exchange")
+        interval = request.args.get("interval")
 
-        to_date = datetime.datetime.today().strftime('%Y-%m-%d %H:%M')
-        from_date = (datetime.datetime.today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d %H:%M')
+        # Add required fromdate & todate
+        today = datetime.date.today()
+        fromdate = f"{today} 09:00"
+        todate = f"{today} 15:30"
 
-        historic_data = obj.getCandleData(
-            symboltoken=symbol_token, exchange=exchange, interval=interval,
-            fromdate=from_date, todate=to_date
-        )
+        # Call SmartAPI function with correct parameters
+        data = smart_api.getCandleData(exchange=exchange,symboltoken=symboltoken,interval=interval,fromdate=fromdate,todate=todate)
 
-        return jsonify(historic_data)
-    
+        return jsonify(data)
+
     except Exception as e:
         return jsonify({"error": str(e)})
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
