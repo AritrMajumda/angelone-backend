@@ -16,8 +16,7 @@ totp = pyotp.TOTP(TOTP_SECRET).now()
 
 # Authenticate with Angel One using MPIN
 obj = SmartConnect(api_key=API_KEY)
-data = obj.generateSession(CLIENT_ID, MPIN, totp) 
-
+data = obj.generateSession(CLIENT_ID, password=MPIN, totp=totp)
 # Debug: Print login response
 print("Login Response:", data)
 
