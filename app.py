@@ -17,7 +17,7 @@ totp = pyotp.TOTP(TOTP_SECRET).now()
 # Authenticate with Angel One
 obj = SmartConnect(api_key=API_KEY)
 data = obj.generateSession(CLIENT_ID, PASSWORD, totp)
-AUTH_TOKEN = data['data']['jwtToken']
+
 
 data = obj.generateSession(CLIENT_ID, PASSWORD, totp)
 
@@ -27,6 +27,7 @@ print("Login Response:", data)
 # Check if login was successful
 if data is None or 'data' not in data:
     raise Exception("Login failed! Check API key, client ID, password, or TOTP.")
+AUTH_TOKEN = data['data']['jwtToken']
 
 @app.route('/')
 def home():
