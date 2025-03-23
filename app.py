@@ -50,7 +50,7 @@ def get_historical_data():
     try:
         api = login()
         exchange = request.args.get("exchange", "NSE")
-        symbol_token = request.args.get("symbol_token", "3045")
+        symbol_token = request.args.get("symbol_token", "24779")
         interval = request.args.get("interval", "ONE_MINUTE")
         from_date = request.args.get("from_date", "2025-03-01 09:15")
         to_date = request.args.get("to_date", "2025-03-15 15:15")
